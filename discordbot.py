@@ -11,6 +11,7 @@ from discord.ext import commands
 from tabulate import tabulate
 intents = discord.Intents.all()
 intents.message_content = True
+from bot_commands import who_command,char_search,get_realm_rank
 
 
 bot = commands.Bot(command_prefix='/',intents=intents)
@@ -18,8 +19,17 @@ connection = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=local
 
 
 @bot.hybrid_command()
-async def test(ctx):
-    await ctx.send("This is a hybrid command!")
+async def testwho(ctx, p1): 
+    s = who_command(p1)
+    print(s)
+    await ctx.send(s)
+
+@bot.hybrid_command()
+async def testrealmrank(ctx, p1, p2): 
+    s = get_realm_rank(char_search(p1),p2)
+    print(s)
+    await ctx.send(s)
+
 
 @bot.hybrid_command()
 async def nextrank(ctx, p1):

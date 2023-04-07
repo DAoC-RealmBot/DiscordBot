@@ -1,13 +1,21 @@
 import os
 import pyodbc
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, render_template, redirect, url_for, request, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_socketio import SocketIO, send
 from werkzeug.security import generate_password_hash, check_password_hash
+from bot_commands import char_search, link_character, who_command
+import pandas as pd
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
+socketio = SocketIO(app)
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
 
 server = 'localhost'
 database = 'daoctracking'
@@ -63,7 +71,7 @@ def load_user(user_id):
 @app.route("/")
 @login_required
 def home():
-    return f"Hello, {current_user.username}!"
+    return render_template('home.html', username=current_user.username)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -107,5 +115,60 @@ def logout():
     logout_user()
     return redirect(url_for("login"))
 
-if __name__ == "__main__":
+@app.route('/chat')
+def chat():
+    return render_template('chat.html')
+
+@socketio.on('message')
+def handleMessage(msg):
+    print('Message: ' + msg)
+    send(msg, broadcast=True)
+
+
+@app.route('/search', methods=['POST'])
+def search_character():    
+    character_name = request.get_json().get('character', '')
+    # Process the input and execute your Python function here
+    result = your_python_function(character_name)
+
+    
+    return jsonify({'result': result})
+
+
+def your_python_function(character_name):
+    found_characters = char_search(character_name)
+    return  found_characters
+
+@login_required    
+@app.route('/linkcharactertouser', methods=['POST'])
+def process_selected_table():
+    table_data = request.get_json()
+    df = pd.DataFrame(table_data)
+    new_column_name = 'userid'
+    new_column_value = current_user.id
+
+    df[new_column_name] = new_column_value
+    df.columns = ['character_web_id','userid']
+    # Process the DataFrame as needed
+    link_character(df)
+
+    return jsonify({'status': 'success'})
+
+
+
+@app.route('/charactersearch/<name>', methods=['GET'])
+def api_logic(name):
+    #Call char_search from bot_commands library
+    data = char_search(name)
+    return data#jsonify(data)
+
+
+
+if __name__ == '__main__':
     app.run(debug=True)
+
+
+
+
+
+

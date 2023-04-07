@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+</head>
+<body>
+    <div style="text-align: center;">
+        <h1>Welcome, {{ username }}!</h1>
+        <h2>Character Search</h2>
+        <form id="search-form" style="display: inline-block;">
+            <input type="text" id="character" name="character" placeholder="Enter character name" required>
+            <button type="submit">Search</button>
+        </form>
+        <button id="process-selected" type="button">Process Selected Rows</button>
+        <table id="results-table">
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>Character ID</th>
+                    <th>Character Name</th>
+                    <!-- Add more columns as needed -->
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
+        <script>
+            document.getElementById('search-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                searchCharacter();
+            });
+
+            function searchCharacter() {
+                const characterName = document.getElementById('character').value;
+                const resultsTable = document.getElementById('results-table');
+
+                fetch('/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ character: characterName })
+                })
+                .then(response => response.json())
+                .then(data => {
+
+                    // Clear the previous results
+                    resultsTable.querySelector('tbody').innerHTML = '';
+
+                    // Iterate through the results and add them to the table
+                    data.result.results.forEach(row => {
+                        const tr = document.createElement('tr');
+
+                        const tdSelect = document.createElement('td');
+                        const checkBox = document.createElement('input');
+                        checkBox.type = 'checkbox';
+                        checkBox.className = 'row-checkbox';
+                        tdSelect.appendChild(checkBox);
+                        tr.appendChild(tdSelect);
+                        
+                        const td1 = document.createElement('td');
+                        td1.textContent = row.character_web_id;
+                        tr.appendChild(td1);
+                        
+                        const td2 = document.createElement('td');
+                        td2.textContent = row.name;
+                        tr.appendChild(td2);
+
+                        // Add more columns as needed
+
+                        resultsTable.querySelector('tbody').appendChild(tr);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+            
+            document.getElementById('process-selected').addEventListener('click', () => {
+            const selectedRows = Array.from(document.querySelectorAll('.row-checkbox:checked'))
+                .map(checkbox => checkbox.closest('tr'));
+
+            const tableData = [];
+
+           // Extract table data from the selectedRows
+            selectedRows.forEach(tr => {
+                // Get all td elements in the row
+                const allTds = tr.querySelectorAll('td');
+
+                // Choose which columns to include in tableData
+                const rowData = [
+                    allTds[1].textContent, // Include the second column
+
+                ];
+
+                tableData.push(rowData);
+            });
+
+            // Send table data to the server as JSON
+            fetch('/linkcharactertouser', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(tableData)
+            })
+            .then(response => {
+                // Handle the response, e.g., display a message or update the page content
+                console.log('Data sent to the server');
+                console.log(tableData);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+        </script>
+    </div>
+</body>
+</html>
