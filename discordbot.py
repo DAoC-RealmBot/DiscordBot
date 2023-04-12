@@ -1,10 +1,6 @@
 import discord
-import time
 import pyodbc
-import os
-import multiprocessing
 import asyncio
-import functools
 import nest_asyncio
 import pandas as pd
 from discord.ext import commands
@@ -29,6 +25,12 @@ async def testrealmrank(ctx, p1, p2):
     s = get_realm_rank(char_search(p1),p2)
     print(s)
     await ctx.send(s)
+
+@bot.hybrid_command()
+async def testnextrank(ctx, p1): 
+    s = get_realm_rank(char_search(p1))
+    print(s)
+    await ctx.send(s)    
 
 
 @bot.hybrid_command()
@@ -72,39 +74,59 @@ async def who(ctx, p1):
 
 @bot.hybrid_command()
 async def watchlist(ctx):
-    cmd = "execute dbo.WatchListReport"
+    list = []
+    cmd = "select firstname from characters  c join characterrealmstats crs on c.character_web_id = crs.character_web_id and crs.lastrecordflag = 1 where watchlistflag = 1 order by crs.realmpoints desc"
     print(cmd)       
     df = pd.read_sql(cmd, connection)
-    print(tabulate(df, headers = 'keys', tablefmt = 'psql'))    
-    s = "```" + tabulate(df, headers = 'keys', tablefmt = 'psql', showindex =False) + "```"
-    await ctx.send(s)
+    for firstname in df['firstname']:
+        list.append(get_realm_rank(char_search(firstname)))
+
+    formated = pd.DataFrame(list, columns=["Realm Point Watch List"])
+    s = "```" + tabulate(formated, headers = 'keys', tablefmt = 'psql', showindex =False) + "```"
+    print(s)
+    await ctx.send(s) 
 
 @bot.hybrid_command()
 async def watchlisthib(ctx):
-    cmd = "execute dbo.WatchListReport 'hib'"
+    list = []
+    cmd = "select firstname from characters  c join characterrealmstats crs on c.character_web_id = crs.character_web_id and crs.lastrecordflag = 1 where watchlistflag = 1 and realm = 3 order by crs.realmpoints desc"
     print(cmd)       
     df = pd.read_sql(cmd, connection)
-    print(tabulate(df, headers = 'keys', tablefmt = 'psql'))    
-    s = "```" + tabulate(df, headers = 'keys', tablefmt = 'psql', showindex =False) + "```"
-    await ctx.send(s)
+    for firstname in df['firstname']:
+        list.append(get_realm_rank(char_search(firstname)))
+
+    formated = pd.DataFrame(list, columns=["Realm Point Watch List"])
+    s = "```" + tabulate(formated, headers = 'keys', tablefmt = 'psql', showindex =False) + "```"
+    print(s)
+    await ctx.send(s) 
 
 @bot.hybrid_command()
 async def watchlistalb(ctx):
-    cmd = "execute dbo.WatchListReport 'alb'"
+    list = []
+    cmd = "select firstname from characters  c join characterrealmstats crs on c.character_web_id = crs.character_web_id and crs.lastrecordflag = 1 where watchlistflag = 1 and realm = 1 order by crs.realmpoints desc"
     print(cmd)       
     df = pd.read_sql(cmd, connection)
-    print(tabulate(df, headers = 'keys', tablefmt = 'psql'))    
-    s = "```" + tabulate(df, headers = 'keys', tablefmt = 'psql', showindex =False) + "```"
-    await ctx.send(s)
+    for firstname in df['firstname']:
+        list.append(get_realm_rank(char_search(firstname)))
+
+    formated = pd.DataFrame(list, columns=["Realm Point Watch List"])
+    s = "```" + tabulate(formated, headers = 'keys', tablefmt = 'psql', showindex =False) + "```"
+    print(s)
+    await ctx.send(s) 
 
 @bot.hybrid_command()
 async def watchlistmid(ctx):
-    cmd = "execute dbo.WatchListReport 'mid'"
+    list = []
+    cmd = "select firstname from characters  c join characterrealmstats crs on c.character_web_id = crs.character_web_id and crs.lastrecordflag = 1 where watchlistflag = 1 and realm = 2 order by crs.realmpoints desc"
     print(cmd)       
     df = pd.read_sql(cmd, connection)
-    print(tabulate(df, headers = 'keys', tablefmt = 'psql'))    
-    s = "```" + tabulate(df, headers = 'keys', tablefmt = 'psql', showindex =False) + "```"
-    await ctx.send(s)
+    for firstname in df['firstname']:
+        list.append(get_realm_rank(char_search(firstname)))
+
+    formated = pd.DataFrame(list, columns=["Realm Point Watch List"])
+    s = "```" + tabulate(formated, headers = 'keys', tablefmt = 'psql', showindex =False) + "```"
+    print(s)
+    await ctx.send(s) 
 
 @bot.hybrid_command()
 async def realmrank(ctx, p1, p2):

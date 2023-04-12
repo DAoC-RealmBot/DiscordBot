@@ -65,15 +65,32 @@ async def import_character(char_id):
     # Close the connection
     cursor.close()
 
-def get_realm_rank(json_data, realm_rank):
+def get_realm_rank(json_data, realm_rank=None):
     character_info = json_data['results'][0]
     #char_id = character_info['character_web_id']
     char_name = character_info['name']
     realm_points = character_info['realm_points']
-    filtered_table = realmrank_table[realmrank_table['realmrank'] == realm_rank]
-    first_row = filtered_table.iloc[0]
-    realm_points_needed = first_row['realmpoints']
-    return char_name + ' needs ' + str(realm_points_needed - realm_points) + ' realm points for ' + realm_rank
+
+    if realm_rank is None:        
+        
+        filtered_table = realmrank_table[realmrank_table['realmpoints'] > realm_points]
+        first_row = filtered_table.iloc[0]
+        realm_points_needed = first_row['realmpoints']
+        realm_rank = first_row['realmrank']
+        formated_rps = format(realm_points_needed - realm_points, ",")
+        s = char_name + ' needs ' + formated_rps + ' realm points for ' + realm_rank
+
+    else:
+        filtered_table = realmrank_table[realmrank_table['realmrank'] == str(realm_rank).upper()]
+        first_row = filtered_table.iloc[0]
+        
+        realm_points_needed = first_row['realmpoints']
+        formated_rps = format(realm_points_needed - realm_points, ",")
+        s = char_name + ' needs ' + formated_rps + ' realm points for ' + realm_rank
+    
+    return s
+    
+
 async def import_guild(guild_web_id, guild_name):
 
     cursor  = conn.cursor()
@@ -145,7 +162,7 @@ def who_command(charname):
     line5 = 'Realm Rank: ' + first_row['realmrank']
     line6 = 'Unguilded'
     if guild_rank != 0:
-        line6 = 'Rank ' + guild_rank + ' member of ' + guild_name
+        line6 = 'Rank ' + str(guild_rank) + ' member of ' + guild_name
     if guild_rank == 0 :
         line6 = 'Guild Master of ' + guild_name
 

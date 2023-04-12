@@ -1,21 +1,11 @@
-import asyncio
+from flask import Flask
+from waitress import serve
+app = Flask(__name__)
 
-async def sleep_example():
-    print("Start sleeping")
-    await asyncio.sleep(5)
-    print("Finished sleeping")
+@app.route('/')
+def hello_world():
+    return 'Hello, World!'
 
-async def print_after_delay():
-    print('2')
-
-async def main():
-    await sleep_example()
-
-async def run_coroutines():
-    main_task = asyncio.create_task(main())
-    #print_task = asyncio.create_task(print_after_delay())
-    await asyncio.gather(main_task)
-
-print('1')
-asyncio.run(run_coroutines())
-print('2')
+if __name__ == '__main__':
+    
+    serve(app, host="0.0.0.0", port=8080)
