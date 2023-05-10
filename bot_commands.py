@@ -166,6 +166,20 @@ def who_command(charname):
     if guild_rank == 0 :
         line6 = 'Guild Master of ' + guild_name
 
+    if character_info['last_on_range'] == 0:
+        last_on = 'Recently'
+    elif character_info['last_on_range'] == 1:
+        last_on = 'Within 7 Days'
+    elif character_info['last_on_range'] == 2:
+        last_on = 'Within 30 Days'
+    elif character_info['last_on_range'] == 3:
+        last_on = 'Within 90 Days'
+    elif character_info['last_on_range'] == 4:
+        last_on = 'Inactive'
+    else:
+        last_on = 'Unknown'
+
+    line7 = 'Last On: ' + last_on
     connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=daoctracking;trusted_connection=yes"
     conn = pyodbc.connect(connection_string)
     cursor = conn.cursor()
@@ -184,15 +198,15 @@ def who_command(charname):
 
     cursor.execute(irsquery, char_name)
     result = cursor.fetchone()
-    lifetime_irs = 0
-    daily_irs = 0
+    lifetime_irs = 'Lifetime IRS: '
+    daily_irs = 'Daily IRS: '
     if result:
         lifetime_irs = result.lifetime
         daily_irs = result.daily
 
-    line7 = str(lifetime_irs)
-    line8 = str(daily_irs)
-    combined_string = '\n'.join([line1, line2, line3, line4, line5, line6, line7, line8])
+    line8 = str(lifetime_irs)
+    line9 = str(daily_irs)
+    combined_string = '\n'.join([line1, line2, line3, line4, line5, line6, line7, line8, line9])
 
     asyncio.run(run_imports(char_id,guild_web_id,guild_name))    
 

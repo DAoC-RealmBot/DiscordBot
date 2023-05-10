@@ -15,62 +15,26 @@ connection = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=local
 
 
 @bot.hybrid_command()
-async def testwho(ctx, p1): 
+async def who(ctx, p1): 
     s = who_command(p1)
     print(s)
     await ctx.send(s)
 
 @bot.hybrid_command()
-async def testrealmrank(ctx, p1, p2): 
+async def realmrank(ctx, p1, p2): 
     s = get_realm_rank(char_search(p1),p2)
     print(s)
     await ctx.send(s)
 
 @bot.hybrid_command()
-async def testnextrank(ctx, p1): 
+async def nextrank(ctx, p1): 
     s = get_realm_rank(char_search(p1))
     print(s)
     await ctx.send(s)    
 
 
-@bot.hybrid_command()
-async def nextrank(ctx, p1):
-    cmd = "execute dbo.GetNextRealmDing '" + p1 + "'"
-    cursor=connection.cursor()
-    cursor.execute(cmd)
-    row = cursor.fetchone()
-    s = str(row)
-    cursor.close()
-    await ctx.send(s[2:-4])
 
-@bot.hybrid_command()
-async def who(ctx, p1):
-    cmd = "execute dbo.GetCharacterInfo '" + p1 + "'"
-    print(cmd)
-    cursor=connection.cursor()
-    cursor.execute(cmd)
-    row = cursor.fetchall()
-    cursor.commit()
-    cursor.close()
-    s1 = str(row[0])
-    
-    s2 = str(row[1])
-    s3 = str(row[2])
-    s4 = str(row[3])
-    s5 = str(row[4])
-    s6 = str(row[5])
-    s7 = str(row[6])
-    s8 = str(row[7])
-    s = s1[2:-4] + '\n' + s2[2:-4] + '\n' + s3[2:-4] + '\n' + s4[2:-4] + '\n' + s5[2:-4] + '\n' + s6[2:-4]
 
-    if s7 != '(None, )':
-        s = s + '\n' + s7[2:-4] + '\n' + s8[2:-4]
-    
-    
-    if s1 == '(None, )':
-        s = 'Character not found!'    
-   
-    await ctx.send(s)
 
 @bot.hybrid_command()
 async def watchlist(ctx):
@@ -128,16 +92,6 @@ async def watchlistmid(ctx):
     print(s)
     await ctx.send(s) 
 
-@bot.hybrid_command()
-async def realmrank(ctx, p1, p2):
-    cmd = "execute dbo.GetNextRealmDing '" + p1 + "', '" + p2 + "'"
-    cursor=connection.cursor()
-    cursor.execute(cmd)
-    row = cursor.fetchone()
-    s = str(row)
-    cursor.close()
-    await ctx.send(s[2:-4])
-
 
 @bot.hybrid_command()
 async def top10(ctx):
@@ -156,6 +110,36 @@ async def class10(ctx, p1):
     print(tabulate(df, headers = 'keys', tablefmt = 'psql'))
     s = "```" + tabulate(df, headers = 'keys', tablefmt = 'psql') + "```"
     await ctx.send(s)
+
+@bot.hybrid_command()
+async def leaderboard(ctx,p1, p2):
+    if p1 == None:
+        top = 20
+    elif int(p1) > 100:
+        top = 100
+    else:
+        top = p1
+
+    realm = ''
+    if p2.lower() == 'alb':
+        realm = ' and realm = 1'
+    elif p2.lower() == 'mid':
+        realm = ' and realm = 2'
+    elif p2.lower() =='hib':
+        realm = ' and realm = 3'
+
+    select = 'select top ' + top + " c.name, class_name, case c.realm when 1 then 'Alb' when 2 then 'Mid' when 3 then 'Hib' end as Realm, max(crs.realmpoints) - min(crs.realmpoints) as [RPsEarned]"
+    join = ' from characters c join characterrealmstats crs on c.character_web_id = crs.character_web_id'
+    where =' where crs.importdate between dateadd(day,-8,getdate()) and getdate()' + realm
+    groupby = ' group by c.name, class_name,c.realm order by 4 desc'
+    cmd = select + join + where + groupby
+    print(cmd)       
+    df = pd.read_sql(cmd, connection)
+   
+
+    s = "```" + tabulate(df, headers = 'keys', tablefmt = 'psql', showindex =False) + "```"
+    print(s)
+    await ctx.send(s) 
 
 @bot.event
 async def on_ready():
@@ -182,6 +166,33 @@ async def timerjob():
 
          await asyncio.sleep(60)
 
+
+@bot.hybrid_command()
+async def pm(ctx, p1: discord.Member):
+    if not ctx.author.voice:
+        await ctx.send("You need to be in a voice channel to use this command.")
+        return
+
+    voice_channel = ctx.author.voice.channel
+    members = voice_channel.members
+
+    for member in members:
+        if member == ctx.author or member == p1:
+            continue
+
+        await member.edit(mute=True, deafen=True)
+
+@bot.hybrid_command()
+async def fin(ctx):
+    if not ctx.author.voice:
+        await ctx.send("You need to be in a voice channel to use this command.")
+        return
+
+    voice_channel = ctx.author.voice.channel
+    members = voice_channel.members
+
+    for member in members:
+        await member.edit(mute=False, deafen=False)
          
 async def startbot():   
     await bot.run('MTAyMjY5MDkxMTQwODM2OTczNA.GoOQGY.Xc1Az3OryXF-hIGpB5CbvldLoiU3_8XKMsmcI0')
