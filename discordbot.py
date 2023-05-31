@@ -14,8 +14,9 @@ import os
 bot = commands.Bot(command_prefix='/',intents=intents, case_insensitive=True)
 connection = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=daoctracking;Trusted_Connection=yes;')
 
-load_dotenv()
+load_dotenv('discordbot.env')
 apikey = os.getenv("API_KEY")
+
 
 @bot.hybrid_command()
 async def who(ctx, p1): 
@@ -212,7 +213,7 @@ async def fin(ctx):
         await member.edit(mute=False, deafen=False)
          
 async def startbot():   
-    await bot.run("MTAyMjY5MDkxMTQwODM2OTczNA.GoOQGY.Xc1Az3OryXF-hIGpB5CbvldLoiU3_8XKMsmcI0")
+    await bot.run(apikey)
 
  
 async def main():
