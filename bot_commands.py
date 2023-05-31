@@ -4,6 +4,7 @@ import json
 import pandas as pd
 import asyncio
 import time
+from tabulate import tabulate
 from sqlalchemy import create_engine, text
 
 connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=daoctracking;trusted_connection=yes"
@@ -145,10 +146,9 @@ def who_command(charname):
     char_id = character_info['character_web_id']
     char_name = character_info['name']
     realm_points = character_info['realm_points']
-    guild_info = character_info['guild_info']
-    guild_web_id = guild_info['guild_web_id']
-    guild_rank = guild_info['guild_rank']
-    guild_name = guild_info['guild_name']
+    guild_web_id = ''
+    guild_name= ''
+    
     
     line1 = 'Name: ' + character_info['name']
     line2 = 'Race: ' + character_info['race']
@@ -161,10 +161,16 @@ def who_command(charname):
 
     line5 = 'Realm Rank: ' + first_row['realmrank']
     line6 = 'Unguilded'
-    if guild_rank != 0:
-        line6 = 'Rank ' + str(guild_rank) + ' member of ' + guild_name
-    if guild_rank == 0 :
-        line6 = 'Guild Master of ' + guild_name
+    if 'guild_info' in character_info:
+        guild_info = character_info['guild_info']
+        guild_web_id = guild_info['guild_web_id']
+        guild_rank = guild_info['guild_rank']
+        guild_name = guild_info['guild_name']
+
+        if guild_rank != 0:
+            line6 = 'Rank ' + str(guild_rank) + ' member of ' + guild_name
+        if guild_rank == 0 :
+            line6 = 'Guild Master of ' + guild_name
 
     if character_info['last_on_range'] == 0:
         last_on = 'Recently'
@@ -213,6 +219,62 @@ def who_command(charname):
     return combined_string
 
     #ImportAllianceGuild
+
+def get_stats(charname):
+    response_json = char_search(charname)['results'][0]     
+    char_id = response_json['character_web_id']
+    char_name = response_json['name']
+    char_info = character_info(char_id)
+    realm_war_stats = char_info['realm_war_stats']['current']
+    total_realm_points = realm_war_stats['realm_points']
+    total_bounty_points = realm_war_stats['bounty_points']
+    total_player_kills = realm_war_stats['player_kills']['total']['kills']
+    total_deaths = realm_war_stats['player_kills']['total']['deaths']
+    total_death_blows = realm_war_stats['player_kills']['total']['death_blows']
+    total_player_solo_kills = realm_war_stats['player_kills']['total']['solo_kills']
+    stats=realm_war_stats['player_kills']
+
+    guild_web_id = ''
+    guild_name= ''
+    if 'guild_info' in char_info:
+        guild_info = char_info['guild_info']
+        guild_web_id = guild_info['guild_web_id']
+        guild_name = guild_info['guild_name']
+    
+    headers = [char_name + ' - ' + str(format(total_realm_points,',') + ' RPs '), "Kills", "Deaths", "Death Blows", "Solo Kills"]
+
+    # Create a list of data rows for the table
+    rows = [
+        ["Total", total_player_kills, total_deaths, total_death_blows, total_player_solo_kills]
+    ]
+
+
+    if 'midgard' in stats:
+        mid_player_kills = realm_war_stats['player_kills']['midgard']['kills']
+        mid_deaths = None
+        mid_death_blows = realm_war_stats['player_kills']['midgard']['death_blows']
+        mid_player_solo_kills = realm_war_stats['player_kills']['midgard']['solo_kills']
+        rows.append(["Midgard", mid_player_kills, mid_deaths, mid_death_blows, mid_player_solo_kills])
+
+    if 'hibernia' in stats:
+        hib_player_kills = realm_war_stats['player_kills']['hibernia']['kills']
+        hib_deaths = None
+        hib_death_blows = realm_war_stats['player_kills']['hibernia']['death_blows']
+        hib_player_solo_kills = realm_war_stats['player_kills']['hibernia']['solo_kills']
+        rows.append(["Hibernia", hib_player_kills, hib_deaths, hib_death_blows, hib_player_solo_kills])
+
+    if 'albion' in stats:
+        alb_player_kills = realm_war_stats['player_kills']['albion']['kills']
+        alb_deaths = None
+        alb_death_blows = realm_war_stats['player_kills']['albion']['death_blows']
+        alb_player_solo_kills = realm_war_stats['player_kills']['albion']['solo_kills']  
+        rows.append(["Albion", alb_player_kills, alb_deaths, alb_death_blows, alb_player_solo_kills])
+
+    table = tabulate(rows, headers=headers, tablefmt="presto")
+    formatted_table = f"```\n{table}\n```"
+
+    asyncio.run(run_imports(char_id,guild_web_id,guild_name))
+    return (formatted_table)
 
 
 

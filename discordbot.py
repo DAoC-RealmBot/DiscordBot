@@ -7,16 +7,22 @@ from discord.ext import commands
 from tabulate import tabulate
 intents = discord.Intents.all()
 intents.message_content = True
-from bot_commands import who_command,char_search,get_realm_rank
+from bot_commands import who_command,char_search,get_realm_rank, get_stats
 
 
-bot = commands.Bot(command_prefix='/',intents=intents)
+bot = commands.Bot(command_prefix='/',intents=intents, case_insensitive=True)
 connection = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=daoctracking;Trusted_Connection=yes;')
 
 
 @bot.hybrid_command()
 async def who(ctx, p1): 
     s = who_command(p1)
+    print(s)
+    await ctx.send(s)
+
+@bot.hybrid_command()
+async def stats(ctx, p1): 
+    s = get_stats(p1)
     print(s)
     await ctx.send(s)
 
@@ -92,6 +98,14 @@ async def watchlistmid(ctx):
     print(s)
     await ctx.send(s) 
 
+@bot.hybrid_command()
+async def helprb(ctx):
+    cmd = "select commandtext as[Command List - Commands are NOT case sensitive!] from commands"
+    print(cmd)       
+    df = pd.read_sql(cmd, connection)
+    s = "```" + tabulate(df, headers = 'keys', tablefmt = 'psql', showindex =False) + "```"
+    print(s)
+    await ctx.send(s) 
 
 @bot.hybrid_command()
 async def top10(ctx):
