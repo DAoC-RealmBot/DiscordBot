@@ -6,16 +6,23 @@ import asyncio
 import time
 from tabulate import tabulate
 from sqlalchemy import create_engine, text
+from dotenv import load_dotenv
+import os
 
 connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=daoctracking;trusted_connection=yes"
 conn = pyodbc.connect(connection_string)
 rank_query = 'select * from realmranks'
 realmrank_table = pd.read_sql(rank_query, conn)
 
-server = 'localhost'
-database = 'daoctracking'
-username = 'RealmBotSvc'
-password = 'Password1'
+load_dotenv('discordbot.env')
+
+
+server = os.getenv("server")
+database = os.getenv("database")
+username = os.getenv("username")
+password = os.getenv("password")
+
+
 
 def char_search(charname):
     url = f'https://api.camelotherald.com/character/search?cluster=Ywain&name={charname}'
