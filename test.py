@@ -1,11 +1,10 @@
-from flask import Flask
-from waitress import serve
-app = Flask(__name__)
+import sys
+from bot_commands import char_search    
+import warnings
+warnings.filterwarnings("ignore")
 
-@app.route('/')
-def hello_world():
-    return 'Hello, World!'
+param1 = "Mezzaroo"
 
-if __name__ == '__main__':
-    
-    serve(app, host="0.0.0.0", port=8080)
+response_json = char_search(param1)
+
+print (response_json)

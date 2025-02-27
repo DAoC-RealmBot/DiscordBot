@@ -8,20 +8,21 @@ from tabulate import tabulate
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 import os
+import warnings
+warnings.filterwarnings("ignore")
 
-connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=daoctracking;trusted_connection=yes"
-conn = pyodbc.connect(connection_string)
-rank_query = 'select * from realmranks'
-realmrank_table = pd.read_sql(rank_query, conn)
 
 load_dotenv('discordbot.env')
 
-
 server = os.getenv("server")
 database = os.getenv("database")
-username = os.getenv("username")
+username = os.getenv("UID")
 password = os.getenv("password")
-
+driver = 'DRIVER={ODBC Driver 17 for SQL Server}'
+connection_string = f'{driver};SERVER={server};DATABASE={database};UID={username}; PWD={password};'
+conn = pyodbc.connect(connection_string)
+rank_query = 'select * from realmranks'
+realmrank_table = pd.read_sql(rank_query, conn)
 
 
 def char_search(charname):
@@ -193,7 +194,7 @@ def who_command(charname):
         last_on = 'Unknown'
 
     line7 = 'Last On: ' + last_on
-    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=daoctracking;trusted_connection=yes"
+    #connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=daoctracking;trusted_connection=yes"
     conn = pyodbc.connect(connection_string)
     cursor = conn.cursor()
 

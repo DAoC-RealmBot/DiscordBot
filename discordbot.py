@@ -10,12 +10,31 @@ intents.message_content = True
 from bot_commands import who_command,char_search,get_realm_rank, get_stats
 from dotenv import load_dotenv
 import os
+import ffmpeg
+import youtube_dl
+from youtubesearchpython import VideosSearch
+
+#Use Virtual Environment
+#CD "E:\daoc tools\discord\discordbot"
+#python -m venv discordbot
+#discordbot\Scripts\activate
+#python discordbot.py
+#deactivate
+
+
 
 bot = commands.Bot(command_prefix='/',intents=intents, case_insensitive=True)
-connection = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=daoctracking;Trusted_Connection=yes;')
+
 
 load_dotenv('discordbot.env')
 apikey = os.getenv("API_KEY")
+server = os.getenv("server")
+database = os.getenv("database")
+username = os.getenv("UID")
+password = os.getenv("password")
+driver = 'DRIVER={ODBC Driver 17 for SQL Server}'
+
+connection = pyodbc.connect(f'{driver};SERVER={server};DATABASE={database};UID={username}; PWD={password};')
 
 
 @bot.hybrid_command()
@@ -169,17 +188,17 @@ async def timerjob():
     while True:
          
                   
-         cmd = "execute dbo.GetAnnouncements"
-         cursor=connection.cursor()
-         cursor.execute(cmd)
-         row = cursor.fetchone()        
-         cursor.close()
+         #cmd = "execute dbo.GetAnnouncements"
+         #cursor=connection.cursor()
+         #cursor.execute(cmd)
+         #row = cursor.fetchone()        
+         #cursor.close()
        
-         if row is not None :            
+         #if row is not None :            
                  
-             channel = bot.get_channel(row[4])
-             s = str(row[1]).replace(row[7],"&" + row[5])
-             await channel.send(s)
+         #    channel = bot.get_channel(row[4])
+         #    s = str(row[1]).replace(row[7],"&" + row[5])
+         #    await channel.send(s)
 
 
          await asyncio.sleep(60)
@@ -212,6 +231,37 @@ async def fin(ctx):
     for member in members:
         await member.edit(mute=False, deafen=False)
          
+
+@bot.hybrid_command()
+async def comeplay(ctx):
+    if not ctx.author.voice:
+        await ctx.send("You need to be in a voice channel to use this command.")
+        return
+
+    channel = ctx.author.voice.channel
+    await channel.connect()
+
+@bot.hybrid_command()
+async def doneplaying(ctx):
+    if not ctx.author.voice:
+        await ctx.send("You need to be in a voice channel to use this command.")
+        return
+
+    await ctx.voice_client.disconnect()
+
+@bot.hybrid_command()
+async def playclip(ctx):
+    channel = ctx.author.voice.channel
+    filename = r"C:\Users\mages\OneDrive\Documents\d&d\Audio\Horse Race.mp3"
+    if ctx.voice_client is None:
+        await channel.connect()
+
+    ctx.voice_client.stop()
+    FFmpegPCMAudio = discord.FFmpegPCMAudio
+    ctx.voice_client.play(FFmpegPCMAudio(executable="ffmpeg", source=filename))
+
+
+
 async def startbot():   
     await bot.run(apikey)
 
